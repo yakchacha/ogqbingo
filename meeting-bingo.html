@@ -35,6 +35,11 @@
             margin-bottom: 30px;
         }
 
+        .logo {
+            max-height: 50px;
+            margin-bottom: 10px;
+        }
+
         h1 {
             color: #333;
             font-size: 2.5em;
@@ -232,8 +237,9 @@
 <body>
     <div class="container">
         <div class="header">
+            <img src="https://i.imgur.com/EPQTCHV.png" alt="로고" class="logo">
             <h1>🎯 회의 빙고 게임</h1>
-            <p class="subtitle">회의 중 나오는 단골 표현들을 체크해보세요!</p>
+            <p class="subtitle">지금 회의 중 나오는 단골 표현들을 체크해보세요!</p>
         </div>
 
         <div class="controls">
@@ -330,7 +336,6 @@
         function checkBingo() {
             const newBingoLines = [];
             
-            // 가로 체크
             for (let row = 0; row < 4; row++) {
                 const line = [];
                 for (let col = 0; col < 4; col++) {
@@ -341,7 +346,6 @@
                 }
             }
             
-            // 세로 체크
             for (let col = 0; col < 4; col++) {
                 const line = [];
                 for (let row = 0; row < 4; row++) {
@@ -352,7 +356,6 @@
                 }
             }
             
-            // 대각선 체크
             const diagonal1 = [];
             const diagonal2 = [];
             for (let i = 0; i < 4; i++) {
@@ -367,7 +370,6 @@
                 newBingoLines.push(diagonal2);
             }
             
-            // 새로운 빙고가 생겼는지 확인
             if (newBingoLines.length > bingoLines.length) {
                 celebrate();
             }
@@ -409,7 +411,6 @@
         }
 
         function autoCheck() {
-            // 테스트용: 랜덤하게 몇 개 체크
             const randomCount = Math.floor(Math.random() * 8) + 4;
             const availableIndices = Array.from({length: 16}, (_, i) => i)
                 .filter(i => !checkedCells.has(i));
@@ -425,7 +426,6 @@
             updateStats();
         }
 
-        // 초기화
         generateNewBoard();
     </script>
 </body>
