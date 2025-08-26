@@ -35,11 +35,6 @@
             margin-bottom: 30px;
         }
 
-        .logo {
-            max-height: 50px;
-            margin-bottom: 10px;
-        }
-
         h1 {
             color: #333;
             font-size: 2.5em;
@@ -237,7 +232,6 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="https://i.imgur.com/EPQTCHV.png" alt="로고" class="logo">
             <h1>회의 빙고 게임</h1>
             <p class="subtitle">회의 중 나오는 단골 표현들을 체크해보세요!</p>
         </div>
@@ -274,7 +268,7 @@
             "목표가 뭔가요", "목적이 뭔가요", "시간 관계상", "KPI가 어떻게 되죠",
             "객단가", "회의 가시죠", "디테일하게", "스터디하시죠",
             "내일까지 가능하실까요", "리소스가 부족해서", "공유 부탁드려요", "많이 아쉬운 부분",
-            "노니하시죠", "조율하시죠", "3주 전에 알려주셔야 합니다"
+            "노니하시죠", "조율하시죠", "3주 전에 알려주셔야 합니다", "노니 후 조율하시죠"
         ];
 
         let currentBoard = [];
@@ -336,6 +330,7 @@
         function checkBingo() {
             const newBingoLines = [];
             
+            // 가로 체크
             for (let row = 0; row < 4; row++) {
                 const line = [];
                 for (let col = 0; col < 4; col++) {
@@ -346,6 +341,7 @@
                 }
             }
             
+            // 세로 체크
             for (let col = 0; col < 4; col++) {
                 const line = [];
                 for (let row = 0; row < 4; row++) {
@@ -356,6 +352,7 @@
                 }
             }
             
+            // 대각선 체크
             const diagonal1 = [];
             const diagonal2 = [];
             for (let i = 0; i < 4; i++) {
@@ -370,6 +367,7 @@
                 newBingoLines.push(diagonal2);
             }
             
+            // 새로운 빙고가 생겼는지 확인
             if (newBingoLines.length > bingoLines.length) {
                 celebrate();
             }
@@ -426,6 +424,7 @@
             updateStats();
         }
 
+        // 초기화
         generateNewBoard();
     </script>
 </body>
