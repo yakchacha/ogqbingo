@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점심 메뉴 룰렛</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 2s ease-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-orange-50 to-red-50">
+    <div class="max-w-4xl mx-auto p-6">
+        <!-- 헤더 -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">🎯 점심 메뉴 룰렛</h1>
+            <p class="text-gray-600">오늘 점심 뭐 먹을지 고민되나요? 룰렛을 돌려보세요!</p>
+        </header>
+
+        <!-- 탭 네비게이션 -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-lg shadow-lg p-2 flex">
+                <button onclick="showTab('roulette')" id="tab-roulette" class="px-6 py-2 rounded-md font-medium transition-colors bg-blue-500 text-white">
+                    🎯 룰렛
+                </button>
+                <button onclick="showTab('restaurants')" id="tab-restaurants" class="px-6 py-2 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100">
+                    🍽️ 맛집 목록
+                </button>
+                <button onclick="showTab('rankings')" id="tab-rankings" class="px-6 py-2 rounded-md font-medium transition-colors text-gray-600 hover:bg-gray-100">
+                    🏆 인기 순위
+                </button>
+            </div>
+        </div>
+
+        <!-- 룰렛 탭 -->
+        <div id="content-roulette" class="bg-white rounded-xl shadow-lg p-8">
+            <div id="empty-roulette" class="text-center py-12 hidden">
+                <div class="text-6xl mb-4">🍽️</div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">등록된 맛집이 없습니다</h3>
+                <p class="text-gray-500 mb-6">먼저 맛집을 등록해주세요!</p>
+                <button onclick="showTab('restaurants')" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    맛집 등록하러 가기
+                </button>
+            </div>
+            
+            <div id="roulette-content">
+                <!-- 룰렛 휠 -->
+                <div class="relative w-80 h-80 mx-auto mb-8">
+                    <div id="roulette-wheel" class="w-full h-full rounded-full border-8 border-blue-500 relative overflow-hidden">
+                        <div class="w-full h-full bg-gray-200 rounded-full flex items-center justify-center">
+                            <span class="text-gray-500">맛집을 등록해주세요</span>
+                        </div>
+                    </div>
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-2">
+                        <div class="w-0 h-0 border-l-4 border-r-4 border-b-8 border-l-transparent border-r-transparent border-b-red-600"></div>
+                    </div>
+                </div>
+                
+                <!-- 룰렛 버튼 -->
+                <div class="text-center mb-6">
+                    <button onclick="spinRoulette()" id="spin-button" class="px-8 py-4 rounded-full font-bold text-white text-lg transition-all bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transform hover:scale-105">
+                        🎲 룰렛 돌리기
+                    </button>
+                </div>
+
+                <!-- 결과 표시 -->
+                <div id="result-display" class="bg-gradient-to-r from-green-50 to-blue-50 rounded-xl p-6 border-2 border-green-200 hidden">
+                    <div class="text-center">
+                        <h3 class="text-2xl font-bold text-green-700 mb-2">🎉 오늘의 점심은!</h3>
+                        <div class="bg-white rounded-lg p-4 shadow-md">
+                            <h4 id="selected-name" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                            <div id="selected-details" class="flex justify-center items-center space-x-4 text-sm text-gray-600">
+                            </div>
+                        </div>
+                        <button onclick="voteForSelected()" id="vote-button" class="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            👍 이 선택 좋아요!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 맛집 목록 탭 -->
+        <div id="content-restaurants" class="bg-white rounded-xl shadow-lg p-8 hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">맛집 목록</h2>
+                <div class="flex space-x-2">
+                    <button onclick="clearAllData()" id="clear-all-btn" class="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors hidden">
+                        🗑️ 전체 삭제
+                    </button>
+                    <button onclick="toggleAddForm()" class="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        ➕ 맛집 추가
+                    </button>
+                </div>
+            </div>
+
+            <!-- 맛집 추가 폼 -->
+            <div id="add-form" class="bg-gray-50 rounded-lg p-6 mb-6 hidden">
+                <h3 class="text-lg font-semibold mb-4">새 맛집 등록</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="text" id="new-name" placeholder="가게 이름" class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="new-category" class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">카테고리 선택</option>
+                        <option value="한식">한식</option>
+                        <option value="양식">양식</option>
+                        <option value="일식">일식</option>
+                        <option value="중식">중식</option>
+                        <option value="아시안">아시안</option>
+                        <option value="패스트푸드">패스트푸드</option>
+                        <option value="기타">기타</option>
+                    </select>
+                    <input type="text" id="new-distance" placeholder="거리 (예: 도보 5분)" class="px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex justify-end mt-4 space-x-2">
+                    <button onclick="toggleAddForm()" class="px-4 py-2 text-gray-600 border rounded-md hover:bg-gray-50">
+                        취소
+                    </button>
+                    <button onclick="addRestaurant()" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+                        등록
+                    </button>
+                </div>
+            </div>
+
+            <!-- 빈 상태 -->
+            <div id="empty-restaurants" class="text-center py-12 hidden">
+                <div class="text-6xl mb-4">📝</div>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">등록된 맛집이 없습니다</h3>
+                <p class="text-gray-500 mb-6">첫 번째 맛집을 등록해보세요!</p>
+                <button onclick="toggleAddForm()" class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                    맛집 등록하기
+                </button>
+            </div>
+
+            <!-- 맛집 목록 -->
+            <div id="restaurants-list"></div>
+        </div>
+
+        <!-- 인기 순위 탭 -->
+        <div id="content-rankings" class="bg-white rounded-xl shadow-lg p-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                🏆 인기 랭킹
+            </h2>
+            <div id="rankings-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let restaurants = [];
+        let selectedRestaurant = null;
+        let isSpinning = false;
+
+        // 탭 전환
+        function showTab(tabName) {
+            // 모든 탭 숨기기
+            document.querySelectorAll('[id^="content-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="tab-"]').forEach(el => {
+                el.classList.remove('bg-blue-500', 'text-white');
+                el.classList.add('text-gray-600', 'hover:bg-gray-100');
+            });
+            
+            // 선택된 탭 보이기
+            document.getElementById(`content-${tabName}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabName}`).classList.add('bg-blue-500', 'text-white');
+            document.getElementById(`tab-${tabName}`).classList.remove('text-gray-600', 'hover:bg-gray-100');
+            
+            updateDisplay();
+        }
+
+        // 맛집 추가 폼 토글
+        function toggleAddForm() {
+            const form = document.getElementById('add-form');
+            form.classList.toggle('hidden');
+            
+            // 폼이 열릴 때 입력 필드 초기화
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('new-name').value = '';
+                document.getElementById('new-category').value = '';
+                document.getElementById('new-distance').value = '';
+            }
+        }
+
+        // 맛집 추가
+        function addRestaurant() {
+            const name = document.getElementById('new-name').value.trim();
+            const category = document.getElementById('new-category').value;
+            const distance = document.getElementById('new-distance').value.trim();
+
+            if (!name || !category) {
+                alert('가게 이름과 카테고리는 필수입니다.');
+                return;
+            }
+
+            const restaurant = {
+                id: Date.now(),
+                name: name,
+                category: category,
+                distance: distance || '미정',
+                rating: 0,
+                reviews: [],
+                votes: 0
+            };
+
+            restaurants.push(restaurant);
+            toggleAddForm();
+            updateDisplay();
+        }
+
+        // 맛집 삭제
+        function deleteRestaurant(id) {
+            if (confirm('이 맛집을 삭제하시겠습니까?')) {
+                restaurants = restaurants.filter(r => r.id !== id);
+                updateDisplay();
+            }
+        }
+
+        // 전체 데이터 삭제
+        function clearAllData() {
+            if (confirm('정말로 모든 맛집 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                restaurants = [];
+                selectedRestaurant = null;
+                updateDisplay();
+            }
+        }
+
+        // 투표
+        function voteForRestaurant(id) {
+            const restaurant = restaurants.find(r => r.id === id);
+            if (restaurant) {
+                restaurant.votes++;
+                updateDisplay();
+            }
+        }
+
+        // 선택된 맛집에 투표
+        function voteForSelected() {
+            if (selectedRestaurant) {
+                voteForRestaurant(selectedRestaurant.id);
+            }
+        }
+
+        // 리뷰 추가
+        function addReview(restaurantId) {
+            const user = document.getElementById(`review-user-${restaurantId}`).value.trim();
+            const rating = parseInt(document.getElementById(`review-rating-${restaurantId}`).value);
+            const comment = document.getElementById(`review-comment-${restaurantId}`).value.trim();
+
+            if (!user || !comment) {
+                alert('작성자와 리뷰 내용을 입력해주세요.');
+                return;
+            }
+
+            const restaurant = restaurants.find(r => r.id === restaurantId);
+            if (restaurant) {
+                restaurant.reviews.push({ user, rating, comment });
+                
+                // 평점 재계산
+                const avgRating = restaurant.reviews.reduce((sum, review) => sum + review.rating, 0) / restaurant.reviews.length;
+                restaurant.rating = Math.round(avgRating * 10) / 10;
+
+                // 입력 필드 초기화
+                document.getElementById(`review-user-${restaurantId}`).value = '';
+                document.getElementById(`review-comment-${restaurantId}`).value = '';
+                document.getElementById(`review-rating-${restaurantId}`).value = '5';
+
+                updateDisplay();
+            }
+        }
+
+        // 룰렛 돌리기
+        function spinRoulette() {
+            if (restaurants.length === 0 || isSpinning) return;
+
+            isSpinning = true;
+            const button = document.getElementById('spin-button');
+            const wheel = document.getElementById('roulette-wheel');
+            const resultDisplay = document.getElementById('result-display');
+
+            button.textContent = '돌리는 중...';
+            button.disabled = true;
+            resultDisplay.classList.add('hidden');
+            
+            wheel.classList.add('spinning');
+
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * restaurants.length);
+                selectedRestaurant = restaurants[randomIndex];
+                
+                // 결과 표시
+                document.getElementById('selected-name').textContent = selectedRestaurant.name;
+                document.getElementById('selected-details').innerHTML = `
+                    <span class="bg-blue-100 px-3 py-1 rounded-full">${selectedRestaurant.category}</span>
+                    <span class="flex items-center">📍 ${selectedRestaurant.distance}</span>
+                    <span class="flex items-center">⭐ ${selectedRestaurant.rating}</span>
+                `;
+                
+                resultDisplay.classList.remove('hidden');
+                wheel.classList.remove('spinning');
+                button.textContent = '🎲 룰렛 돌리기';
+                button.disabled = false;
+                isSpinning = false;
+            }, 2000);
+        }
+
+        // 룰렛 휠 그리기
+        function drawRouletteWheel() {
+            const wheel = document.getElementById('roulette-wheel');
+            
+            if (restaurants.length === 0) {
+                wheel.innerHTML = '<div class="w-full h-full bg-gray-200 rounded-full flex items-center justify-center"><span class="text-gray-500">맛집을 등록해주세요</span></div>';
+                return;
+            }
+
+            const colors = ['bg-red-400', 'bg-blue-400', 'bg-green-400', 'bg-yellow-400', 'bg-purple-400', 'bg-pink-400', 'bg-indigo-400', 'bg-orange-400'];
+            let html = '';
+
+            restaurants.forEach((restaurant, index) => {
+                const angle = (360 / restaurants.length) * index;
+                const nextAngle = (360 / restaurants.length) * (index + 1);
+                const midAngle = (angle + nextAngle) / 2;
+                
+                const x1 = 50 + 50 * Math.cos(angle * Math.PI / 180);
+                const y1 = 50 + 50 * Math.sin(angle * Math.PI / 180);
+                const x2 = 50 + 50 * Math.cos(nextAngle * Math.PI / 180);
+                const y2 = 50 + 50 * Math.sin(nextAngle * Math.PI / 180);
+                
+                const textX = 50 + 30 * Math.cos(midAngle * Math.PI / 180);
+                const textY = 50 + 30 * Math.sin(midAngle * Math.PI / 180);
+
+                html += `
+                    <div class="absolute w-full h-full ${colors[index % colors.length]}" 
+                         style="clip-path: polygon(50% 50%, ${x1}% ${y1}%, ${x2}% ${y2}%);">
+                        <div class="absolute text-white font-bold text-xs whitespace-nowrap transform -translate-x-1/2 -translate-y-1/2"
+                             style="left: ${textX}%; top: ${textY}%; transform: translate(-50%, -50%) rotate(${midAngle}deg);">
+                            ${restaurant.name.length > 8 ? restaurant.name.substring(0, 6) + '..' : restaurant.name}
+                        </div>
+                    </div>
+                `;
+            });
+
+            wheel.innerHTML = html;
+        }
+
+        // 맛집 목록 렌더링
+        function renderRestaurantsList() {
+            const list = document.getElementById('restaurants-list');
+            const emptyState = document.getElementById('empty-restaurants');
+            const clearBtn = document.getElementById('clear-all-btn');
+
+            if (restaurants.length === 0) {
+                list.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                clearBtn.classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            clearBtn.classList.remove('hidden');
+
+            let html = '';
+            restaurants.forEach(restaurant => {
+                html += `
+                    <div class="border rounded-lg p-6 hover:shadow-md transition-shadow mb-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">${restaurant.name}</h3>
+                                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                    <span class="bg-blue-100 px-3 py-1 rounded-full">${restaurant.category}</span>
+                                    <span class="flex items-center">📍 ${restaurant.distance}</span>
+                                    <span class="flex items-center">⭐ ${restaurant.rating}</span>
+                                    <span class="flex items-center">👥 ${restaurant.votes}표</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="voteForRestaurant(${restaurant.id})" class="px-3 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors">
+                                    👍 추천
+                                </button>
+                                <button onclick="deleteRestaurant(${restaurant.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors">
+                                    🗑️ 삭제
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            <h4 class="font-semibold text-gray-700 flex items-center">
+                                💬 리뷰 (${restaurant.reviews.length})
+                            </h4>
+                            
+                            ${restaurant.reviews.map(review => `
+                                <div class="bg-gray-50 rounded-md p-3">
+                                    <div class="flex justify-between items-start mb-1">
+                                        <span class="font-medium text-gray-700">${review.user}</span>
+                                        <div class="flex items-center">
+                                            ${'⭐'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">${review.comment}</p>
+                                </div>
+                            `).join('')}
+
+                            <div class="bg-blue-50 rounded-md p-3">
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                                    <input type="text" id="review-user-${restaurant.id}" placeholder="작성자" class="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <select id="review-rating-${restaurant.id}" class="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="5">5점</option>
+                                        <option value="4">4점</option>
+                                        <option value="3">3점</option>
+                                        <option value="2">2점</option>
+                                        <option value="1">1점</option>
+                                    </select>
+                                    <input type="text" id="review-comment-${restaurant.id}" placeholder="리뷰 작성" class="px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <button onclick="addReview(${restaurant.id})" class="px-4 py-2 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition-colors">
+                                        리뷰 등록
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        // 인기 순위 렌더링
+        function renderRankings() {
+            const list = document.getElementById('rankings-list');
+            
+            if (restaurants.length === 0) {
+                list.innerHTML = '<div class="text-center py-12 text-gray-500">등록된 맛집이 없습니다.</div>';
+                return;
+            }
+
+            const sortedRestaurants = [...restaurants].sort((a, b) => b.votes - a.votes);
+            
+            let html = '';
+            sortedRestaurants.forEach((restaurant, index) => {
+                const bgClass = index === 0 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200' :
+                               index === 1 ? 'bg-gradient-to-r from-gray-50 to-blue-50 border-2 border-gray-200' :
+                               index === 2 ? 'bg-gradient-to-r from-orange-50 to-red-50 border-2 border-orange-200' :
+                               'bg-gray-50';
+                
+                const rankBg = index === 0 ? 'bg-yellow-500' :
+                              index === 1 ? 'bg-gray-400' :
+                              index === 2 ? 'bg-orange-500' :
+                              'bg-gray-300';
+
+                html += `
+                    <div class="flex items-center justify-between p-4 rounded-lg mb-4 ${bgClass}">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white ${rankBg}">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-800">${restaurant.name}</h3>
+                                <div class="flex items-center space-x-3 text-sm text-gray-600">
+                                    <span>${restaurant.category}</span>
+                                    <span class="flex items-center">⭐ ${restaurant.rating}</span>
+                                    <span class="flex items-center">💬 리뷰 ${restaurant.reviews.length}개</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-600">${restaurant.votes}</div>
+                            <div class="text-sm text-gray-500">추천</div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+        }
+
+        // 화면 업데이트
+        function updateDisplay() {
+            drawRouletteWheel();
+            renderRestaurantsList();
+            renderRankings();
+            
+            // 룰렛 빈 상태 처리
+            const emptyRoulette = document.getElementById('empty-roulette');
+            const rouletteContent = document.getElementById('roulette-content');
+            
+            if (restaurants.length === 0) {
+                emptyRoulette.classList.remove('hidden');
+                rouletteContent.classList.add('hidden');
+            } else {
+                emptyRoulette.classList.add('hidden');
+                rouletteContent.classList.remove('hidden');
+            }
+        }
+
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            updateDisplay();
+        });
+    </script>
+</body>
+</html>
